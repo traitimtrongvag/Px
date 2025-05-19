@@ -5,7 +5,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
   margin: 0;
 }
 
@@ -15,6 +15,7 @@ body {
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 0 10px #000;
+  max-width: 90%;
 }
 
 input[type="file"] {
@@ -41,9 +42,16 @@ button:hover {
   background: #00e676;
 }
 
-canvas {
+.preview-container {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
   margin-top: 20px;
-  border: 2px solid #444;
+  gap: 20px;
+}
+
+img, canvas {
+  max-width: 300px;
   border-radius: 8px;
-  max-width: 100%;
+  border: 2px solid #444;
 }
