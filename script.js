@@ -66,5 +66,11 @@ document.addEventListener('DOMContentLoaded', function() {
       link.href = canvas.toDataURL();
       link.click();
     }
+  
+const pixelSizeInput = document.getElementById('pixelSize');
+pixelSizeInput.addEventListener('input', function() {
+  pixelSize = parseInt(this.value);
+  if (originalImg.src) applyBlackWhitePixelEffect();
+});
   });
 });
