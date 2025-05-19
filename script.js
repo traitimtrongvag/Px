@@ -3,11 +3,12 @@ document.addEventListener('DOMContentLoaded', function() {
   const originalImg = document.getElementById('originalImg');
   const canvas = document.getElementById('canvas');
   const downloadBtn = document.getElementById('downloadBtn');
-  const pixelSizeInput = document.getElementById('pixelSize');
+  const detailInput = document.getElementById('detailLevel'); // Thay đổi từ pixelSize sang detailLevel
   const ctx = canvas.getContext('2d');
   
-  // Khởi tạo giá trị pixelSize
-  let pixelSize = parseInt(pixelSizeInput.value);
+  // Cấu hình mới
+  let detailLevel = 5; // Mức độ chi tiết (1-10), càng cao càng nhiều pixel
+  let threshold = 128; // Ngưỡng chuyển đổi đen trắng
 
   uploadInput.addEventListener('change', function(e) {
     if (e.target.files && e.target.files[0]) {
@@ -18,22 +19,25 @@ document.addEventListener('DOMContentLoaded', function() {
         originalImg.onload = function() {
           canvas.width = originalImg.width;
           canvas.height = originalImg.height;
-          applyBlackWhitePixelEffect();
+          applyPixelEffect();
         };
       };
       reader.readAsDataURL(e.target.files[0]);
     }
   });
 
-  function applyBlackWhitePixelEffect() {
+  function applyPixelEffect() {
     ctx.drawImage(originalImg, 0, 0, canvas.width, canvas.height);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
 
-    // Chuyển ảnh thành đen trắng
+    // Tính pixelSize dựa trên detailLevel (đảo ngược tỉ lệ)
+    const pixelSize = Math.max(1, Math.floor(10 - detailLevel + 1));
+
+    // Chuyển đổi thành đen trắng tuyệt đối
     for (let i = 0; i < data.length; i += 4) {
       const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-      const bw = gray > 128 ? 255 : 0;
+      const bw = gray > threshold ? 255 : 0;
       data[i] = data[i+1] = data[i+2] = bw;
     }
 
@@ -57,11 +61,11 @@ document.addEventListener('DOMContentLoaded', function() {
     ctx.putImageData(imageData, 0, 0);
   }
 
-  // Xử lý thay đổi kích thước pixel
-  pixelSizeInput.addEventListener('input', function() {
-    pixelSize = parseInt(this.value);
+  // Xử lý thay đổi mức độ chi tiết
+  detailInput.addEventListener('input', function() {
+    detailLevel = parseInt(this.value);
     if (originalImg.src) {
-      applyBlackWhitePixelEffect();
+      applyPixelEffect();
     }
   });
 
