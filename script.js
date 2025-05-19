@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const originalImg = document.getElementById('originalImg');
   const canvas = document.getElementById('canvas');
   const downloadBtn = document.getElementById('downloadBtn');
+  const pixelSizeInput = document.getElementById('pixelSize'); // Thêm dòng này
   const ctx = canvas.getContext('2d');
   let pixelSize = 4; // GIẢM pixelSize để tăng độ nét
 
@@ -11,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const reader = new FileReader();
       reader.onload = function(event) {
         originalImg.src = event.target.result;
-        
+
         originalImg.onload = function() {
           canvas.width = originalImg.width;
           canvas.height = originalImg.height;
@@ -33,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const g = data[i + 1];
       const b = data[i + 2];
       const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-      
+
       // Chỉ giữ lại đen (0) hoặc trắng (255)
       const bw = gray > 128 ? 255 : 0;
       data[i] = data[i + 1] = data[i + 2] = bw;
@@ -59,6 +60,14 @@ document.addEventListener('DOMContentLoaded', function() {
     ctx.putImageData(imageData, 0, 0);
   }
 
+  // Xử lý thay đổi pixelSize
+  pixelSizeInput.addEventListener('input', function() {
+    pixelSize = parseInt(this.value);
+    if (originalImg.src) {
+      applyBlackWhitePixelEffect();
+    }
+  });
+
   downloadBtn.addEventListener('click', function() {
     if (canvas.width > 0) {
       const link = document.createElement('a');
@@ -66,11 +75,5 @@ document.addEventListener('DOMContentLoaded', function() {
       link.href = canvas.toDataURL();
       link.click();
     }
-  
-const pixelSizeInput = document.getElementById('pixelSize');
-pixelSizeInput.addEventListener('input', function() {
-  pixelSize = parseInt(this.value);
-  if (originalImg.src) applyBlackWhitePixelEffect();
-});
   });
 });
