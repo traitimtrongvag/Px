@@ -1,55 +1,82 @@
-const upload = document.getElementById("upload");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const originalImg = document.getElementById("originalImg");
-const downloadBtn = document.getElementById("downloadBtn");
+document.addEventListener('DOMContentLoaded', function() {
+  const uploadInput = document.getElementById('upload');
+  const originalImg = document.getElementById('originalImg');
+  const canvas = document.getElementById('canvas');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const ctx = canvas.getContext('2d');
 
-upload.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  // Khi người dùng chọn ảnh
+  uploadInput.addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      
+      reader.onload = function(event) {
+        originalImg.src = event.target.result;
+        
+        originalImg.onload = function() {
+          // Thiết lập kích thước canvas bằng với ảnh gốc
+          canvas.width = originalImg.width;
+          canvas.height = originalImg.height;
+          
+          // Vẽ ảnh gốc lên canvas
+          ctx.drawImage(originalImg, 0, 0, canvas.width, canvas.height);
+          
+          // Xử lý pixel hóa ảnh
+          pixelateImage();
+        };
+      };
+      
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  });
 
-  const img = new Image();
-  img.onload = () => {
-    originalImg.src = img.src;
-    pixelizeToBlackAndWhite(img);
-  };
-  img.src = URL.createObjectURL(file);
-});
-
-function pixelizeToBlackAndWhite(img, pixelSize = 10) {
-  canvas.width = img.width;
-  canvas.height = img.height;
-
-  // Resize nhỏ tạm
-  const tempCanvas = document.createElement("canvas");
-  const tempCtx = tempCanvas.getContext("2d");
-  const smallW = Math.floor(img.width / pixelSize);
-  const smallH = Math.floor(img.height / pixelSize);
-
-  tempCanvas.width = smallW;
-  tempCanvas.height = smallH;
-
-  tempCtx.drawImage(img, 0, 0, smallW, smallH);
-
-  // Chuyển từng pixel thành trắng/đen
-  const imgData = tempCtx.getImageData(0, 0, smallW, smallH);
-  const data = imgData.data;
-  for (let i = 0; i < data.length; i += 4) {
-    const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-    const bw = gray > 128 ? 255 : 0;
-    data[i] = data[i+1] = data[i+2] = bw;
+  // Hàm pixel hóa ảnh đen trắng
+  function pixelateImage() {
+    const pixelSize = 10; // Kích thước mỗi pixel (có thể điều chỉnh)
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imgData.data;
+    
+    for (let y = 0; y < canvas.height; y += pixelSize) {
+      for (let x = 0; x < canvas.width; x += pixelSize) {
+        // Lấy vị trí pixel trung tâm của khối
+        const centerX = Math.min(x + Math.floor(pixelSize/2), canvas.width - 1);
+        const centerY = Math.min(y + Math.floor(pixelSize/2), canvas.height - 1);
+        
+        // Tính vị trí trong mảng dữ liệu
+        const pos = (centerY * canvas.width + centerX) * 4;
+        
+        // Chuyển sang màu xám (đen trắng)
+        const r = data[pos];
+        const g = data[pos + 1];
+        const b = data[pos + 2];
+        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+        
+        // Áp dụng màu xám cho cả khối pixel
+        for (let py = y; py < y + pixelSize && py < canvas.height; py++) {
+          for (let px = x; px < x + pixelSize && px < canvas.width; px++) {
+            const blockPos = (py * canvas.width + px) * 4;
+            data[blockPos] = gray;     // R
+            data[blockPos + 1] = gray; // G
+            data[blockPos + 2] = gray; // B
+            // Alpha giữ nguyên
+          }
+        }
+      }
+    }
+    
+    // Đưa dữ liệu đã xử lý trở lại canvas
+    ctx.putImageData(imgData, 0, 0);
   }
-  tempCtx.putImageData(imgData, 0, 0);
 
-  // Phóng to để thành pixel trắng đen
-  ctx.imageSmoothingEnabled = false;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(tempCanvas, 0, 0, smallW, smallH, 0, 0, canvas.width, canvas.height);
-}
-
-downloadBtn.addEventListener("click", () => {
-  const link = document.createElement("a");
-  link.download = "pixelized_bw.png";
-  link.href = canvas.toDataURL();
-  link.click();
+  // Nút tải ảnh
+  downloadBtn.addEventListener('click', function() {
+    if (canvas.width > 0) {
+      const link = document.createElement('a');
+      link.download = 'pixel-art.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } else {
+      alert('Vui lòng tải lên ảnh trước!');
+    }
+  });
 });
